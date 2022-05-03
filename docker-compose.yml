@@ -18,8 +18,8 @@ services:
     image: kylemanna/openvpn
     environment:
       TZ: '${TZ}'
-    ports:
-     - "1194:1194/udp"
+#    ports:
+#     - "1194:1194/udp"
     restart: always
     volumes:
      - ${PWD}/data/pihole-etc:/etc/pihole
