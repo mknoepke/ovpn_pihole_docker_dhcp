@@ -6,17 +6,21 @@ c1 <-> ovpn-server <-> c2
 
 ## testrun
 
-### i run my setup.sh script
+### used the ovpn config created before
 > ./setup.sh
 
 ### finetune the openvpn.conf
-swap line
- server *
-to
+```
+# swap line
  server-bridge 10.5.0.2 255.255.255.0 10.5.0.100 10.5.0.199
+# to
+ server-bridge
+ push "route 0.0.0.0 255.255.255.255 net_gateway"
+ push "redirect-gateway def1"
+ push "route-gateway dhcp"
+```
 
-### checked dhcp is running
-
+### checked dhcp is running - it's running
 ```
 $ docker-compose up dhcpcheck
 Starting ovpn_dhcpcheck_1 ... done
@@ -49,21 +53,20 @@ $ docker-compose exec server bash -c "/etc/openvpn/bridge-start; ovpn_run;/etc/o
 
 ### and logged in via vpn twice and checked ips on client and on server
 ```
-$ ip add s |grep "tun\|tap\|wlp2s0"|grep -v "link" -A 5;echo; echo; docker-compose exec server bash -c "ip addr s|grep -v "link" "
+ip add s |grep "tun\|tap\|wlp2s0"|grep -v "link" -A 5;echo; echo; docker-compose exec server bash -c "ip addr s|grep -v "link" "
 6576: wlp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
     inet 192.168.178.28/24 brd 192.168.178.255 scope global dynamic noprefixroute wlp2s0
-18373: tap0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UNKNOWN group default qlen 100
-    inet 10.5.0.100/24 brd 10.5.0.255 scope global tap0
-18374: tap1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UNKNOWN group default qlen 100
-    inet 10.5.0.101/24 brd 10.5.0.255 scope global tap1
+18411: tap0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN group default qlen 100
+18412: tap1: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN group default qlen 100
 
 
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
     inet 127.0.0.1/8 scope host lo
        valid_lft forever preferred_lft forever
-5: tap0: <BROADCAST,MULTICAST,PROMISC,UP,LOWER_UP> mtu 1500 qdisc fq_codel master br0 state UP group default qlen 100
-6: br0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+7: tap0: <BROADCAST,MULTICAST,PROMISC,UP,LOWER_UP> mtu 1500 qdisc fq_codel master br0 state UP group default qlen 100
+8: br0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
     inet 10.5.0.2/24 brd 10.5.0.255 scope global br0
        valid_lft forever preferred_lft forever
 18365: eth0@if18366: <BROADCAST,MULTICAST,PROMISC,UP,LOWER_UP> mtu 1500 qdisc noqueue master br0 state UP group default
+
 ```
