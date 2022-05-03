@@ -1,0 +1,14 @@
+#!/bin/bash
+br="br0"
+tap="tap0"
+eth="eth0"
+eth_ip="10.5.0.2"
+eth_netmask="255.255.255.0"
+eth_broadcast="10.5.0.255"
+openvpn --mktun --dev $tap
+brctl addbr $br
+brctl addif $br $eth
+brctl addif $br $tap
+ifconfig $tap 0.0.0.0 promisc up
+ifconfig $eth 0.0.0.0 promisc up
+ifconfig $br $eth_ip netmask $eth_netmask broadcast $eth_broadcast

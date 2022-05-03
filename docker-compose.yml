@@ -1,0 +1,66 @@
+version: '3'
+services:
+
+  conf:
+    stdin_open: true
+    tty: true
+    image: kylemanna/openvpn
+    volumes:
+     - ${PWD}/data/server:/etc/openvpn
+    command: ["top"]
+    networks:
+      ovpn:
+        ipv4_address: ${subnet}.10
+
+  server:
+    stdin_open: true
+    tty: true
+    image: kylemanna/openvpn
+    environment:
+      TZ: '${TZ}'
+    ports:
+     - "1194:1194/udp"
+    restart: always
+    volumes:
+     - ${PWD}/data/pihole-etc:/etc/pihole
+     - ${PWD}/data/server:/etc/openvpn
+     - ${PWD}/data/server-etc-openvpn-learnaddress.sh:/etc/openvpn/learnaddress.sh
+     - ${PWD}/data/server_bridge-start:/etc/openvpn/bridge-start
+     - ${PWD}/data/server_bridge-stop:/etc/openvpn/bridge-stop
+    cap_add:
+     - NET_ADMIN
+    depends_on:
+     - pihole
+    networks:
+      ovpn:
+        ipv4_address: ${subnet}.2
+    command: ["bash","-c","top"] #/etc/openvpn/bridge-start ; openvpn_run"]
+
+  pihole:
+    image: pihole/pihole:latest
+    environment:
+      TZ: '${TZ}'
+    volumes:
+     - ${PWD}/data/pihole-etc:/etc/pihole
+     - ${PWD}/data/pihole-dnsmasq.d:/etc/dnsmasq.d
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN # Recommended but not required (DHCP needs NET_ADMIN)
+    restart: unless-stopped
+    networks:
+      ovpn:
+        ipv4_address: ${subnet}.3
+
+  dhcpcheck:
+    image: instrumentisto/nmap
+    command: ["nmap","--script","broadcast-dhcp-discover"]
+    networks:
+      ovpn:
+        ipv4_address: ${subnet}.4
+
+networks:
+  ovpn:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: ${subnet}.0/24
